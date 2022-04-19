@@ -1,0 +1,21 @@
+version: "3.9"
+services:
+  web:
+    build: .
+    environment:
+      ENV: development
+    volumes:
+      - "/mnt/c/Users/wesle/IdeaProjects/backend-linker/src:/src"
+    ports:
+      - "4000:4000"
+    command: ["cargo", "watch", "-x", "run"]
+  postgres:
+    image: postgres:14-alpine
+    restart: always
+    environment:
+      POSTGRES_PASSWORD: dev
+      POSTGRES_USER: dev
+      POSTGRES_DB: postgres
+    ports:
+      - "5432:5432"
+
