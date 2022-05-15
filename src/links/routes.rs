@@ -6,13 +6,14 @@ use crate::links::model::{CreateLinkPayload, Link};
 
 #[get("/links")]
 async fn index() -> Result<HttpResponse, ApiError> {
-    let results = Link::find_all()?;
     info!("logging back index");
+    let results = Link::find_all()?;
     Ok(HttpResponse::Ok().json(results))
 }
 
 #[post("/links")]
 async fn create(link_payload: web::Json<CreateLinkPayload>) -> Result<HttpResponse, ApiError> {
+    info!("creating a new link");
     let created_link = Link::create(link_payload.into_inner())?;
     Ok(HttpResponse::Created().json(created_link))
 }
@@ -24,7 +25,7 @@ async fn create(link_payload: web::Json<CreateLinkPayload>) -> Result<HttpRespon
 //         "success": true
 //     }))
 // }
-//
+
 // #[delete("/links/:link_id")]
 // async fn delete() -> impl Responder {
 //     HttpResponse::Created().json(json!({
@@ -35,4 +36,5 @@ async fn create(link_payload: web::Json<CreateLinkPayload>) -> Result<HttpRespon
 
 pub fn routes(config: &mut web::ServiceConfig) {
     config.service(index);
+    config.service(create);
 }

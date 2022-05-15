@@ -9,7 +9,7 @@ use diesel::prelude::*;
 use diesel::types::FromSql;
 use uuid::{Uuid, UuidVersion};
 
-#[derive(Serialize, Deserialize, Queryable)]
+#[derive(Serialize, Deserialize, Queryable, Insertable)]
 pub struct Link {
     pub id: Uuid,
     pub name: String,
@@ -34,6 +34,8 @@ impl Link {
     }
 
     pub fn create(link_payload: CreateLinkPayload) -> Result<Self, ApiError> {
+        info!("creating link payload");
+
         let connection = db::get_connection()?;
 
         let link = Link::from(link_payload);
