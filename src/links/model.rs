@@ -7,6 +7,7 @@ use crate::db;
 use crate::errors::ApiError;
 use crate::schema::links;
 use diesel::prelude::*;
+use diesel::types::Bool;
 use uuid::{Uuid, UuidVersion};
 
 #[derive(Serialize, Deserialize, Queryable, Insertable)]
@@ -35,9 +36,17 @@ pub struct UpdateLinkPayload {
 }
 
 impl Link {
-    pub fn find_all() -> Result<Vec<Self>, ApiError> {
+    pub async fn find_all() -> Result<Vec<Self>, ApiError> {
         let connection = db::get_connection()?;
-        let results = links::table.load::<Link>(&connection)?;
+        let results = web::block(move ||
+            links::table.load::<Link>(&connection).expect("Failed to load links")
+        ).await.map_err(|e| {
+            ApiError {
+                status_code: 500,
+                message: "Failed to load links".to_string()
+            }
+        }).unwrap();
+
         Ok(results)
     }
 
@@ -82,6 +91,25 @@ impl Link {
             }
         }).unwrap();
         Ok(updated_link)
+    }
+
+    pub async fn delete(record_id: Uuid) -> Result<(), ApiError>{
+        info!("deleting link record");
+
+        let connection = db::get_connection().unwrap();
+        web::block(move ||
+            diesel::delete(links::table)
+                .filter(links::id.eq(record_id))
+                .execute(&connection)
+                .expect("Failed to delete record by id")
+        ).await.map_err(|e| {
+            ApiError {
+                status_code: 500,
+                message: "Failed to delete link".to_string()
+            }
+        }).unwrap();
+
+        Ok(())
     }
 }
 

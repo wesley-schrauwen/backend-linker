@@ -8,7 +8,7 @@ use crate::links::model::{CreateLinkPayload, Link, UpdateLinkPayload};
 #[get("/links")]
 async fn index() -> Result<HttpResponse, ApiError> {
     info!("logging back index");
-    let results = Link::find_all()?;
+    let results = Link::find_all().await?;
     Ok(HttpResponse::Ok().json(results))
 }
 
@@ -29,16 +29,18 @@ async fn update(link_id: web::Path<Uuid>, payload: web::Json<UpdateLinkPayload>)
     Ok(HttpResponse::Ok().json(updated_link))
 }
 
-// #[delete("/links/:link_id")]
-// async fn delete() -> impl Responder {
-//     HttpResponse::Created().json(json!({
-//         "code": 201,
-//         "success": true
-//     }))
-// }
+#[delete("/links/{link_id}")]
+async fn delete(link_id: web::Path<Uuid>) -> Result<HttpResponse, ApiError> {
+    info!("deleting link by id");
+    Link::delete(link_id.into_inner()).await?;
+    Ok(HttpResponse::Ok().json(json!({
+        "success": true
+    })))
+}
 
 pub fn routes(config: &mut web::ServiceConfig) {
     config.service(index);
     config.service(create);
     config.service(update);
+    config.service(delete);
 }
